@@ -154,8 +154,6 @@ airctl start --config /opt/pf9/airctl/conf/airctl-config.yaml
 Example:
 ```
 # airctl start --config /opt/pf9/airctl/conf/airctl-config.yaml
-```
-```
  INFO  openstack management plane creation started
  SUCCESS  generating certs and config... 
  SUCCESS  setting up base infrastructure...
