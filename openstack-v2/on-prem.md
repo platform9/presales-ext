@@ -109,14 +109,20 @@ airctl advanced-ddu create-mgmt --config /opt/pf9/airctl/conf/airctl-config.yaml
 
 Example output of cluster post-creation:
 ```
-# kubectl get nodes --kubeconfig='/etc/pf9/kube.d/kubeconfigs/admin.yaml'
+kubectl get nodes --kubeconfig='/etc/pf9/kube.d/kubeconfigs/admin.yaml'
 ```
+output:
 ```
 NAME            STATUS   ROLES    AGE     VERSION
 172.29.20.157   Ready    master   4m29s   v1.29.2
 172.29.20.223   Ready    master   5m41s   v1.29.2
 172.29.21.157   Ready    master   5m42s   v1.29.2
-# kubectl get pods -A --kubeconfig='/etc/pf9/kube.d/kubeconfigs/admin.yaml'
+```
+```
+kubectl get pods -A --kubeconfig='/etc/pf9/kube.d/kubeconfigs/admin.yaml'
+```
+output:
+```
 NAMESPACE     NAME                                       READY   STATUS    RESTARTS   AGE
 kube-system   calico-kube-controllers-6f89d5c87f-44r7x   1/1     Running   0          5m54s
 kube-system   calico-node-8zs4q                          1/1     Running   0          5m52s
