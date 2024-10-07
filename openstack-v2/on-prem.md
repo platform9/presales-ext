@@ -17,6 +17,7 @@ ldconfig -v
 sed -i 's/\(^PATH="[^"]*\)"/\1:\/usr\/local\/ssl\/bin"/' /etc/environment
 source /etc/environment
 ln -sf /usr/local/ssl/bin/openssl /usr/bin/openssl
+cd
 ```
 
 ##### Verify OpenSSL Version
