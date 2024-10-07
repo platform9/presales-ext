@@ -38,6 +38,8 @@ chmod +x ./install-pmo.sh
 
 ```
 ./install-pmo.sh v-5.12.0-3407038
+```
+```
 Extracting airctl tar.gz
 Extracting airctl scripts, conf
 Copying nodelet rpm and deb tar.gz
@@ -58,6 +60,8 @@ source ~/.bashrc
 
 ```
 # airctl configure
+```
+```
 ? Select install driver: openstack
 ? Number of master nodes: 3
 ? Space separated list of Master Node IPs. Example: 1.1.1.1 2.2.2.2: 172.29.21.157 172.29.20.223 172.29.20.157
@@ -104,6 +108,8 @@ airctl advanced-ddu create-mgmt --config /opt/pf9/airctl/conf/airctl-config.yaml
 Example output of cluster post-creation:
 ```
 # kubectl get nodes --kubeconfig='/etc/pf9/kube.d/kubeconfigs/admin.yaml'
+```
+```
 NAME            STATUS   ROLES    AGE     VERSION
 172.29.20.157   Ready    master   4m29s   v1.29.2
 172.29.20.223   Ready    master   5m41s   v1.29.2
@@ -140,6 +146,8 @@ airctl start --config /opt/pf9/airctl/conf/airctl-config.yaml
 Example:
 ```
 # airctl start --config /opt/pf9/airctl/conf/airctl-config.yaml
+```
+```
  INFO  openstack management plane creation started
  SUCCESS  generating certs and config... 
  SUCCESS  setting up base infrastructure...
@@ -163,6 +171,8 @@ kubectl logs -n <ns> <pod name> -f
 Example:
 ```
 # kubectl get pods -n foo-kplane | grep du-install
+```
+```
 du-install-foo-bmqqd                        0/1     Completed   0          108m
 du-install-foo-region1-f7fdw                0/1     Completed   0          98m
 ```
@@ -172,6 +182,8 @@ du-install-foo-region1-f7fdw                0/1     Completed   0          98m
 Also, users can check the status using airctl status command. Sample output
 ```
 # airctl status --config /opt/pf9/airctl/conf/airctl-config.yaml
+```
+```
 ------------- deployment details ---------------
 fqdn:                foo.bar.io
 cluster:             foo-kplane.bar.io
@@ -188,7 +200,9 @@ airctl get-creds --config /opt/pf9/airctl/conf/airctl-config.yaml
 ```
 
 Example:
-```# airctl get-creds --config /opt/pf9/airctl/conf/airctl-config.yaml 
+```# airctl get-creds --config /opt/pf9/airctl/conf/airctl-config.yaml
+```
+```
 email:     admin@airctl.localnet
 password:  qaChMBjgkghucTnv
 ```
