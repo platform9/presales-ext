@@ -146,7 +146,7 @@ kube-system   kube-dns-autoscaler-5d49f47844-7whbj       1/1     Running   0    
 airctl init --config /opt/pf9/airctl/conf/airctl-config.yaml
 ```
 
-### Run airctl start
+#### Run airctl start
 ```
 airctl start --config /opt/pf9/airctl/conf/airctl-config.yaml
 ```
