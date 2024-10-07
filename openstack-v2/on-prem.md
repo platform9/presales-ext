@@ -39,6 +39,7 @@ chmod +x ./install-pmo.sh
 ```
 ./install-pmo.sh v-5.12.0-3407038
 ```
+Output:
 ```
 Extracting airctl tar.gz
 Extracting airctl scripts, conf
@@ -81,10 +82,11 @@ Generated '/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml' and '/opt/pf9/air
 > Edit `/opt/pf9/airctl/conf/airctl-config.yaml` and populate the field `secduFqdn` with the actual region URLs and edit duRegion fields in a space separated manner.
 > Note that the first region name in duRegion field should be Infra. The other regions can be named as preferred. Here we have set is as Region1
 ```
-$ cat /opt/pf9/airctl/conf/airctl-config.yaml | grep -ie duFqdn -ie secduFqdn -ie duRegion
+$ cat /opt/pf9/airctl/conf/airctl-config.yaml | grep -ie duRegion -ie duFqdn -ie secduFqdn
+duRegion: Infra Region1
 duFqdn: foo.bar.io
 secduFqdn: foo-region1.bar.io
-duRegion: Infra Region1
+
 ```
 > [!IMPORTANT]
 > In above, foo.bar.io corresponds to Infra region which will only have Keystone service running. The Nova, Neutron, Glance and rest of the services would run on the main regions. From the example, foo-region1.bar.io corresponding to Region1
@@ -102,7 +104,7 @@ masterVipVrouterId: 119
 
 #### Create Nodelet Multi-Master K8s cluster
 ```
-airctl advanced-ddu create-mgmt --config /opt/pf9/airctl/conf/airctl-config.yaml
+airctl advanced-ddu create-mgmt --config /opt/pf9/airctl/conf/airctl-config.yaml --verbose
 ```
 
 Example output of cluster post-creation:
