@@ -312,7 +312,7 @@ apt install python3-openstackclient -y
 ```
 
 #### Authentication: OpenStack CLI
-1. UI: Access & Security -> API Access -> OpenStack RC
+1. UI: Access & Security -> API Access -> OpenStack RC (Update `OS_REGION_NAME` & `OS_PASSWORD`)
 2. `source openstackrc`
 
 ## Upload Image via Glance
