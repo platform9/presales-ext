@@ -311,11 +311,11 @@ No resources found
 apt install python3-openstackclient -y
 ```
 
-#### Obtain OpenStack RC
+#### Authentication: OpenStack CLI
 1. UI: Access & Security -> API Access -> OpenStack RC
 2. `source openstackrc`
 
-#### Upload Image via Glance
+## Upload Image via Glance
 ```
 openstack image create --insecure --container-format bare --disk-format qcow2 --public --file <path_to_file> <image_name>
 ```
