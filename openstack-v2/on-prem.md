@@ -28,7 +28,7 @@ openssl version
 ### On a single management plane node
 #### Download Platform9 Artifacts & Execute Installer
 ```
-curl --user-agent "d1307db89fe74daa83ebd17a71218198" https://pf9-airctl.s3-accelerate.amazonaws.com/v-5.12.0-3407038/index.txt | grep -e airctl -e install-pmo.sh -e nodelet-deb.tar.gz -e nodelet.tar.gz -e pmo-chart.tgz -e options.json | awk '{print "curl -sS --user-agent \"d1307db89fe74daa83ebd17a71218198\" \"https://pf9-airctl.s3-accelerate.amazonaws.com/v-5.12.0-3407038/" $NF "\" -o /root/" $NF}' | bash
+curl --user-agent "d1307db89fe74daa83ebd17a71218198" https://pf9-airctl.s3-accelerate.amazonaws.com/v-5.12.0-3414667/index.txt | grep -e airctl -e install-pmo.sh -e nodelet-deb.tar.gz -e nodelet.tar.gz -e pmo-chart.tgz -e options.json | awk '{print "curl -sS --user-agent \"d1307db89fe74daa83ebd17a71218198\" \"https://pf9-airctl.s3-accelerate.amazonaws.com/v-5.12.0-3414667/" $NF "\" -o /root/" $NF}' | bash
 ```
 
 ```
@@ -37,7 +37,7 @@ chmod +x ./install-pmo.sh
 
 
 ```
-./install-pmo.sh v-5.12.0-3407038
+./install-pmo.sh v-5.12.0-3414667
 ```
 Output:
 ```
@@ -79,13 +79,13 @@ Generated '/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml' and '/opt/pf9/air
 
 
 #### Post Command Completion
-> Edit `/opt/pf9/airctl/conf/airctl-config.yaml` and populate the field `secduFqdn` with the actual region URLs and edit duRegion fields in a space separated manner.
+> Edit `/opt/pf9/airctl/conf/airctl-config.yaml` and populate the field `additionalDuFqdns` with the actual region URLs and edit duRegion fields in a space separated manner.
 > Note that the first region name in duRegion field should be Infra. The other regions can be named as preferred. Here we have set is as Region1
 ```
-$ cat /opt/pf9/airctl/conf/airctl-config.yaml | grep -ie duRegion -ie duFqdn -ie secduFqdn
+$ cat /opt/pf9/airctl/conf/airctl-config.yaml | grep -ie duRegion -ie duFqdn -ie additionalDuFqdns
 duRegion: Infra Region1
 duFqdn: foo.bar.io
-secduFqdn: foo-region1.bar.io
+additionalDuFqdns: foo-region1.bar.io
 
 ```
 > [!IMPORTANT]
