@@ -28,7 +28,7 @@ openssl version
 ### On a single management plane node
 #### Download Platform9 Artifacts & Execute Installer
 ```
-curl --user-agent "d1307db89fe74daa83ebd17a71218198" https://pf9-airctl.s3-accelerate.amazonaws.com/v-5.12.0-3414667/index.txt | grep -e airctl -e install-pmo.sh -e nodelet-deb.tar.gz -e nodelet.tar.gz -e pmo-chart.tgz -e options.json | awk '{print "curl -sS --user-agent \"d1307db89fe74daa83ebd17a71218198\" \"https://pf9-airctl.s3-accelerate.amazonaws.com/v-5.12.0-3414667/" $NF "\" -o /root/" $NF}' | bash
+curl --user-agent "d1307db89fe74daa83ebd17a71218198" https://pf9-airctl.s3-accelerate.amazonaws.com/v-5.12.0-3418508/index.txt | grep -e airctl -e install-pmo.sh -e nodelet-deb.tar.gz -e nodelet.tar.gz -e pmo-chart.tgz -e options.json | awk '{print "curl -sS --user-agent \"d1307db89fe74daa83ebd17a71218198\" \"https://pf9-airctl.s3-accelerate.amazonaws.com/v-5.12.0-3418508/" $NF "\" -o /root/" $NF}' | bash
 ```
 
 ```
@@ -37,7 +37,8 @@ chmod +x ./install-pmo.sh
 
 
 ```
-./install-pmo.sh v-5.12.0-3414667
+./install-pmo.sh v-5.12.0-3418508
+
 ```
 Output:
 ```
@@ -79,24 +80,63 @@ Generated '/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml' and '/opt/pf9/air
 
 
 #### Post Command Completion
-> Edit `/opt/pf9/airctl/conf/airctl-config.yaml` and populate the field `additionalDuFqdns` with the actual region URLs and edit duRegion fields in a space separated manner.
-> Note that the first region name in duRegion field should be Infra. The other regions can be named as preferred. Here we have set is as Region1
+* Populate the field additionalDuFqdns with the actual region URLs and edit duRegion fields in the generated configuration file /opt/pf9/airctl/conf/airctl-config.yaml in a space separated manner.
+* Note that the first region name in duRegion field should be Infra. The other regions can be named as preferred. Here we have set is as Region1
+
+**Single Region Example:**
 ```
-$ cat /opt/pf9/airctl/conf/airctl-config.yaml | grep -ie duRegion -ie duFqdn -ie additionalDuFqdns
-duRegion: Infra Region1
+$ cat /opt/pf9/airctl/conf/airctl-config.yaml | grep -ie duFqdn -ie additionalDuFqdns -ie duRegion
 duFqdn: foo.bar.io
 additionalDuFqdns: foo-region1.bar.io
-
+duRegion: Infra Region1
 ```
+> [!NOTE]
+> In above, foo.bar.io corresponds to Infra region which will only have Keystone service running. 
+> The Nova, Neutron, Glance and rest of the services would run on the main regions. From the example, foo-region1.bar.io corresponding to Region1
+
+If more than 1 region is required, below example can be referred:
+```
+$ cat /opt/pf9/airctl/conf/airctl-config.yaml | grep -ie duFqdn -ie additionalDuFqdns -ie duRegion
+duFqdn: foo.bar.io
+additionalDuFqdns: foo-region1.bar.io foo-region2.bar.io
+duRegion: Infra Region1 Region2
+```
+* Also add below parameters in `/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml` file. 
 > [!IMPORTANT]
-> In above, foo.bar.io corresponds to Infra region which will only have Keystone service running. The Nova, Neutron, Glance and rest of the services would run on the main regions. From the example, foo-region1.bar.io corresponding to Region1
-
-
-Additionally, add below parameters in `/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml`. Change settings as required if interface is different.
+> Change settings as required if interface is different.
 ```
+# cat /opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml | grep -e masterVipEnabled -e masterVipInterface -e masterVipVrouterId
 masterVipEnabled: true
 masterVipInterface: ens3
 masterVipVrouterId: 119
+```
+
+* To ensure the deployments happens with a proxy, set the required values in file /opt/pf9/airctl/conf/helm_values/kplane.template.yml
+
+Example:
+```
+# cat /opt/pf9/airctl/conf/helm_values/kplane.template.yml | grep proxy
+https_proxy: "http://squid.platform9.horse:3128"
+http_proxy: "http://squid.platform9.horse:3128"
+no_proxy: "172.29.20.208,172.29.21.80,172.29.21.27,127.0.0.1,10.20.0.0/22,localhost,::1,.svc,.svc.cluster.local,10.21.0.0/16,10.20.0.0/16,.cluster.local,.bar.io,.default.svc"
+```
+
+Also, to ensure containerd honors the proxy values so that management cluster can be created, update proxy values as shown below:
+```
+# cat /etc/environment
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/local/ssl/bin"
+HTTP_PROXY="http://squid.platform9.horse:3128"
+https_proxy="http://squid.platform9.horse:3128"
+http_proxy="http://squid.platform9.horse:3128"
+HTTPS_PROXY="http://squid.platform9.horse:3128"
+NO_PROXY="10.149.105.43,127.0.0.1,10.20.0.0/22,localhost,::1,.svc,.svc.cluster.local,10.21.0.0/16,10.20.0.0/16,.cluster.local,.platform9.localnet,.default.svc"
+no_proxy="10.149.105.43,127.0.0.1,10.20.0.0/22,localhost,::1,.svc,.svc.cluster.local,10.21.0.0/16,10.20.0.0/16,.cluster.local,.platform9.localnet,.default.svc"
+```
+
+```
+# cat /etc/systemd/system/containerd.service.d/http-proxy.conf
+[Service]
+EnvironmentFile=/etc/environment
 ```
 
 
