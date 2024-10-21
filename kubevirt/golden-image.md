@@ -41,7 +41,7 @@ metadata:
 spec:
   source:
     http:
-      url: "http://198.19.99.7/SilverPeak/ECV-9.1.4.2_92345.qcow2"
+      url: "<image_url>.qcow2"
   pvc:
     accessModes:
       - ReadWriteMany
