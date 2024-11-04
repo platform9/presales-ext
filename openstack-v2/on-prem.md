@@ -121,7 +121,7 @@ no_proxy="10.149.105.43,127.0.0.1,10.20.0.0/22,localhost,::1,.svc,.svc.cluster.l
 EnvironmentFile=/etc/environment
 ```
 ---
-### Deployment of K8s Cluster
+### Deployment of Management Cluster
 
 #### Create Nodelet Multi-Master K8s cluster:
 ```
