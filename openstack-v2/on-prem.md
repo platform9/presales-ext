@@ -1,12 +1,12 @@
 ### This article highlights steps to install [Private Cloud Director](https://platform9.com/private-cloud-director/) in an onprem online mode.
-#### Refer to [Pre-requisites](https://platform9.com/docs/private-cloud-director/private-cloud-director/pre-requisites) for Host Hardware, Networking and Storage Requirements
+#### Refer to [Pre-requisites](https://platform9.com/docs/private-cloud-director/private-cloud-director/pre-requisites) for Host Hardware, Networking and Storage Requirements.
 
 ### Prep / Configuration (For all management plane nodes)
-#### Install cgroup-tools
+#### Install cgroup-tools:
 ```
 apt-get update -y && apt-get install cgroup-tools -y
 ```
-#### Update OpenSSL Version to 3.0.7 for Ubuntu 22.04
+#### Update OpenSSL Version to 3.0.7 for Ubuntu 22.04:
 ```
 curl --user-agent "<REDACTED>" https://pf9-airctl.s3-accelerate.amazonaws.com/openssl-smcp-ubuntu/openssl_3.0.7-1_amd64.deb --output openssl_3.0.7-1_amd64.deb
 sudo dpkg -i openssl_3.0.7-1_amd64.deb
@@ -18,19 +18,19 @@ source /etc/environment
 ln -sf /usr/local/ssl/bin/openssl /usr/bin/openssl
 cd
 ```
-> [!NOTE] The User agent key will need to be requested from Platform9. 
+> The User agent key will need to be requested from Platform9. 
  
-##### Verify OpenSSL Version
+##### Verify OpenSSL Version:
 ```
 openssl version
 ```
 ---
-### Download Platform9 Artifacts & Set Configuration
+### Download Platform9 Artifacts & Set Configuration:
 #### To be done only on one of management plane nodes
 ```
-curl --user-agent "<REDACTED>" https://pf9-airctl.s3-accelerate.amazonaws.com/v-5.12.0-3433619/index.txt | grep -e airctl -e install-pmo.sh -e nodelet-deb.tar.gz -e nodelet.tar.gz -e pmo-chart.tgz -e options.json | awk '{print "curl -sS --user-agent \"<REDACTED>\" \"https://pf9-airctl.s3-accelerate.amazonaws.com/v-5.12.0-3433619/" $NF "\" -o /root/" $NF}' | bash
+curl --user-agent "<REDACTED>" https://pf9-airctl.s3-accelerate.amazonaws.com/latest/index.txt | grep -e airctl -e install-pmo.sh -e nodelet-deb.tar.gz -e nodelet.tar.gz -e pmo-chart.tgz -e options.json | awk '{print "curl -sS --user-agent \"<REDACTED>\" \"https://pf9-airctl.s3-accelerate.amazonaws.com/latest/" $NF "\" -o /root/" $NF}' | bash
 ```
-> [!NOTE] The User agent key and Build version will need to be requested from Platform9.
+> The User agent key will need to be requested from Platform9.
 ```
 chmod +x ./install-pmo.sh
 ```
@@ -57,14 +57,16 @@ airctl configure
 ? Enter external IP for DU: 172.29.21.1
 Generated '/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml' and '/opt/pf9/airctl/conf/airctl-config.yaml'. Please review and edit any fields as necessary.
 ```
-> [!NOTE] 
-> Ensure to select install driver as openstack.
+> [!IMPORTANT] 
+> Ensure to select install driver as `openstack`.
 > 
-> The FQDN you will provide in the above command prompt will be for the `Infra` region which gets populated into `duFqdn` field in `airctl-config.yaml`.
+> The FQDN you will provide in the above command prompt will be for the `Infra` region which gets populated into `duFqdn` field in `/opt/pf9/airctl/conf/airctl-config.yaml`.
 
-#### Post Command Completion
-* Populate the field additionalDuFqdns with the actual region URLs and edit duRegion fields in the generated configuration file `/opt/pf9/airctl/conf/airctl-config.yaml` in a space separated manner.
-* Note that the first region name in `duRegion` field should be `Infra`. The other regions can be named as preferred. Here we have set is as `Region1`.
+#### Post Command Completion:
+> [!IMPORTANT] 
+> Populate the field `additionalDuFqdns` with the actual region URLs and edit `duRegion` fields in the configuration file `/opt/pf9/airctl/conf/airctl-config.yaml` in a space separated manner.
+> 
+> Note that the first region name in `duRegion` field should be `Infra`. The other regions can be named as preferred. Here we have set is as `Region1`.
 
 **Single Region Example:**
 ```
@@ -74,7 +76,8 @@ additionalDuFqdns: foo-region1.bar.io
 duRegion: Infra Region1
 ```
 > [!NOTE]
-> In above, `foo.bar.io` corresponds to `Infra` region which will only have Keystone service running. 
+> In above, `foo.bar.io` corresponds to `Infra` region which will only have Keystone service running.
+> 
 > The Nova, Neutron, Glance and rest of the services would run on the main regions. From the example, `foo-region1.bar.io` corresponding to `Region1`
 
 If more than 1 region is required, below example can be referred:
@@ -84,27 +87,36 @@ duFqdn: foo.bar.io
 additionalDuFqdns: foo-region1.bar.io foo-region2.bar.io
 duRegion: Infra Region1 Region2
 ```
-* Also add below parameters in `/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml` file. 
+> [!WARNING]
+> The URL domain should be same for both `duFqdn` and `additionalDuFqdns` i.e. in example `bar.io` as domain is present for the provided `additionalDuFqdns` values.
+> Providing `duFqdn` as `foo.bar.io` and `additionalDuFqdns` as `bar-region1.foo.io` is NOT supported.
+>
+> Also at this point, adding new regions at a later stage is NOT supported. So ensure you configure all required regions before executing next steps.
+
+* For multi-master cluster configuration, add below parameters in `/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml` file. This file has configuration required to bootstrap the Kubernetes cluster. 
 > [!IMPORTANT]
-> Change settings as required if interface is different.
+> Change interface name for `masterVipInterface` as per your node. In example we have set it as ens3. The `masterVipVrouterId` value can be any unique number.
 ```
 # cat /opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml | grep -e masterVipEnabled -e masterVipInterface -e masterVipVrouterId
 masterVipEnabled: true
 masterVipInterface: ens3
 masterVipVrouterId: 119
 ```
+> [!NOTE]
+> In this file, the parameter `masterIp` has the value populated based on the input provided for prompt `VIP for management cluster`. Ensure that this VIP is different from the input provided for prompt `Enter external IP for DU`.
 
-* [Only if required] To ensure the deployments happens with a proxy, set the required values in file `/opt/pf9/airctl/conf/helm_values/kplane.template.yml`
-
-Example:
+---
+#### [Only if required] To ensure the deployments happens with a proxy:
+* Set the required values in file `/opt/pf9/airctl/conf/helm_values/kplane.template.yml`
+> Example:
 ```
 # cat /opt/pf9/airctl/conf/helm_values/kplane.template.yml | grep proxy
 https_proxy: "http://squid.platform9.horse:3128"
 http_proxy: "http://squid.platform9.horse:3128"
 no_proxy: "172.29.20.208,172.29.21.80,172.29.21.27,127.0.0.1,10.20.0.0/22,localhost,::1,.svc,.svc.cluster.local,10.21.0.0/16,10.20.0.0/16,.cluster.local,.bar.io,.default.svc"
 ```
-
-Also, to ensure containerd honors the proxy values so that management cluster can be created, update proxy values on all management plane nodes as shown below:
+* Also, to ensure containerd honors the proxy values so that management cluster can be created, update proxy values on all management plane nodes:
+> Example:
 ```
 # cat /etc/environment
 PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/local/ssl/bin"
@@ -127,6 +139,9 @@ EnvironmentFile=/etc/environment
 ```
 airctl advanced-ddu create-mgmt --config /opt/pf9/airctl/conf/airctl-config.yaml --verbose
 ```
+> [!WARNING]
+> Ensure the nodes to be bootstrapped as Kubernetes nodes have swap disabled on them.
+
 Cluster post-creation:
 ```
 export KUBECONFIG=/etc/pf9/kube.d/kubeconfigs/admin.yaml
@@ -158,12 +173,12 @@ airctl start --config /opt/pf9/airctl/conf/airctl-config.yaml
 ```
 # airctl start --config /opt/pf9/airctl/conf/airctl-config.yaml
  INFO  openstack management plane creation started
- SUCCESS  generating certs and config...                                                                                                                                                                
- SUCCESS  setting up base infrastructure...                                                                                                                                                             
+ SUCCESS  generating certs and config...                                                                                                                          
+ SUCCESS  setting up base infrastructure...                                                                                                                      
 ▀  starting consul...Secret consul-gossip-encryption-key in namespace default not found, creating new...
- INFO  kplane setup done, creating management plane                                                                                                                                                     
- INFO  starting openstack deployment...                                                                                                                                                                 
- SUCCESS  openstack deployment now complete                                                                                                                                                             
+ INFO  kplane setup done, creating management plane                                                                                                     
+ INFO  starting openstack deployment...                                                                                                                         
+ SUCCESS  openstack deployment now complete                                                                                                                       
  INFO  openstack management plane created - the services will take a while to start
 ```
 
@@ -183,7 +198,31 @@ du-install-foo-bmqqd                        0/1     Completed   0          108m
 du-install-foo-region1-f7fdw                0/1     Completed   0          98m
 ```
 > [!NOTE]
-> Please refer to airctl-logs/airctl.log for logs in case of any issues with airctl start command.
+> Please refer to airctl-logs/airctl.log for logs in case of any issues with `airctl start` command.
+
+#### To check the status of management plane/regions:
+```
+airctl status --config /opt/pf9/airctl/conf/airctl-config.yaml
+```
+```
+# airctl status --config /opt/pf9/airctl/conf/airctl-config.yaml
+------------- deployment details ---------------
+fqdn:                foo.bar.io
+cluster:             foo-kplane.bar.io
+region:              foo
+task state:          ready
+-------- region service status ----------
+desired services:  22
+ready services:    22
+------------- deployment details ---------------
+fqdn:                foo-region1.bar.io
+cluster:             foo-kplane.bar.io
+region:              foo-region1
+task state:          ready
+-------- region service status ----------
+desired services:  44
+ready services:    44
+```
 
 #### Obtaining UI Credentials:
 ```
@@ -194,8 +233,8 @@ airctl get-creds --config /opt/pf9/airctl/conf/airctl-config.yaml
 email:     admin@airctl.localnet
 password:  qaChMBjgkghucTnv
 ```
-
-> [IMPORTANT NOTE]
+---
+> [!IMPORTANT]
 > On the local machine **AND** any new host that wants to be authorized to the created management plane, update the `/etc/hosts` file with the external IP and FQDN corresponding to it.
 >
 > This only applies if customers do not have a working internal DNS that will resolve the management plane FQDN to IP.
@@ -208,8 +247,9 @@ password:  qaChMBjgkghucTnv
 ### Preparing Hosts for Authorization to Management Plane
 #### Add Management Plane Certificate to all Hosts:
 > [!NOTE]
-> Since the DU uses self-signed certificates, the API calls from `pmo-ctl` will fail. You need to add the DU certificate using the following commands for Ubuntu 22 on all hypervisor hosts:
-
+> Since the DU uses self-signed certificates, the API calls from `pmo-ctl` will fail.
+>
+> You need to add the DU certificate using the following commands for Ubuntu 22 on all hypervisor hosts:
 ```
 # Export DU_URL
 export DU_URL=<>
@@ -243,20 +283,20 @@ done.
 # curl https://$DU_URL/keystone/v3
 {"version": {"id": "v3.14", "status": "stable", "updated": "2020-04-07T00:00:00Z", "links": [{"rel": "self", "href": "https://foo-region1.bar.io/keystone/v3/"}], "media-types": [{"base": "application/json", "type": "application/vnd.openstack.identity-v3+json"}]}}
 ```
-
+---
 #### Prep-Node
 Run prep-node command on host to be authorized to the management plane (Ensure the cluster blueprint is saved in U/I before doing this):
 > [!NOTE]
 > Here one would ensure that they provide the actual 1st/2nd region in FQDN (foo-region1.bar.io OR foo-region2.bar.io) and not the Infra Region.
-
+> The below information can also be found if navigated to the `Add a New Host` section in `Infrastructure -> Cluster Hosts` tab in U/I.
 ```
 bash <(curl -s https://ngpc-prod-public-data.s3.us-east-2.amazonaws.com/opencloud/pmo-ctl-setup)
 pmo-ctl prep-node
 ```
 ```
-# bash <(curl -s https://ngpc-prod-public-data.s3.us-east-2.amazonaws.com/opencloud/pmo-ctl-setup)
+# bash <(curl -s https://cloud-ctl.s3.us-west-1.amazonaws.com/cloud-ctl-setup)
 
-# pmo-ctl prep-node --verbose
+# cloud-ctl prep-node
 Platform9 Account URL: https://foo-region1.bar.io
 Username: admin@airctl.localnet
 Password: <PASSWORD FROM AIRCTL GET-CREDS COMMAND>
@@ -269,7 +309,7 @@ MFA Token [None]:
 ```
 > [!NOTE]
 > Go back to U/I and complete role assignment for the prepped node.
-
+---
 #### Installing OpenStack CLI:
 ```
 apt install python3-openstackclient -y
