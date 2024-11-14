@@ -28,14 +28,14 @@ openssl version
 ### Download Platform9 Artifacts & Set Configuration:
 #### To be done only on one of management plane nodes
 ```
-curl --user-agent "<REDACTED>" https://pf9-airctl.s3-accelerate.amazonaws.com/latest/index.txt | grep -e airctl -e install-pmo.sh -e nodelet-deb.tar.gz -e nodelet.tar.gz -e pmo-chart.tgz -e options.json | awk '{print "curl -sS --user-agent \"<REDACTED>\" \"https://pf9-airctl.s3-accelerate.amazonaws.com/latest/" $NF "\" -o /root/" $NF}' | bash
+curl --user-agent "<YOUR-USER-AGENT-KEY>" https://pf9-airctl.s3-accelerate.amazonaws.com/latest/index.txt | grep -e airctl -e install-pcd.sh -e nodelet-deb.tar.gz -e nodelet.tar.gz -e pcd-chart.tgz -e options.json -e version.txt | awk '{print "curl -sS --user-agent \"<YOUR-USER-AGENT-KEY>\" \"https://pf9-airctl.s3-accelerate.amazonaws.com/latest/" $NF "\" -o /root/" $NF}' | bash
 ```
 > The User agent key will need to be requested from Platform9.
 ```
-chmod +x ./install-pmo.sh
+chmod +x ./install-pcd.sh
 ```
 ```
-./install-pmo.sh v-5.12.0-3433619
+./install-pcd.sh `cat version.txt`
 ```
 ```
 echo 'export PATH=$PATH:/opt/pf9/airctl' >> ~/.bashrc
