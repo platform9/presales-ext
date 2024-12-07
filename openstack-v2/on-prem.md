@@ -45,34 +45,15 @@ source ~/.bashrc
 ```
 airctl configure
 ```
-```
-# airctl configure
-? Select install driver: openstack
-? Number of master nodes: 3
-? Space separated list of Master Node IPs. Example: 1.1.1.1 2.2.2.2: 172.29.21.157 172.29.20.223 172.29.20.157
-? Space separated list of Worker Node IPs(optional). Example: 3.3.3.3 4.4.4.4:
-? Network Stack: IPv4
-? VIP for management cluster: 172.29.20.175
-? Management Plane FQDN: foo.bar.io
-? Enter external IP for DU: 172.29.21.1
-Generated '/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml' and '/opt/pf9/airctl/conf/airctl-config.yaml'. Please review and edit any fields as necessary.
-```
 > [!IMPORTANT] 
 > Ensure to select install driver as `openstack`.
 > 
 > The FQDN you will provide in the above command prompt will be for the `Infra` region which gets populated into `duFqdn` field in `/opt/pf9/airctl/conf/airctl-config.yaml`.
 
-#### Post Command Completion:
-> [!IMPORTANT] 
-> Populate the field `additionalDuFqdns` with the actual region URLs and edit `duRegion` fields in the configuration file `/opt/pf9/airctl/conf/airctl-config.yaml` in a space separated manner.
-> 
-> Note that the first region name in `duRegion` field should be `Infra`. The other regions can be named as preferred. Here we have set is as `Region1`.
-
 **Single Region Example:**
 ```
 $ cat /opt/pf9/airctl/conf/airctl-config.yaml | grep -ie duFqdn -ie additionalDuFqdns -ie duRegion
 duFqdn: foo.bar.io
-additionalDuFqdns: foo-region1.bar.io
 duRegion: Infra Region1
 ```
 > [!NOTE]
@@ -80,30 +61,70 @@ duRegion: Infra Region1
 > 
 > The Nova, Neutron, Glance and rest of the services would run on the main regions. From the example, `foo-region1.bar.io` corresponding to `Region1`
 
-If more than 1 region is required, below example can be referred:
-```
-# cat /opt/pf9/airctl/conf/airctl-config.yaml | grep -ie duFqdn -ie additionalDuFqdns -ie duRegion
-duFqdn: foo.bar.io
-additionalDuFqdns: foo-region1.bar.io foo-region2.bar.io
-duRegion: Infra Region1 Region2
-```
-> [!WARNING]
-> The URL domain should be same for both `duFqdn` and `additionalDuFqdns` i.e. in example `bar.io` as domain is present for the provided `additionalDuFqdns` values.
-> Providing `duFqdn` as `foo.bar.io` and `additionalDuFqdns` as `bar-region1.foo.io` is NOT supported.
->
-> Also at this point, adding new regions at a later stage is NOT supported. So ensure you configure all required regions before executing next steps.
 
-* For multi-master cluster configuration, add below parameters in `/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml` file. This file has configuration required to bootstrap the Kubernetes cluster. 
-> [!IMPORTANT]
-> Change interface name for `masterVipInterface` as per your node. In example we have set it as ens3. The `masterVipVrouterId` value can be any unique number.
+=> With `custom` storage provider:
 ```
-# cat /opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml | grep -e masterVipEnabled -e masterVipInterface -e masterVipVrouterId
-masterVipEnabled: true
-masterVipInterface: ens3
-masterVipVrouterId: 119
+# airctl configure
+? Select install driver: openstack
+? Space separated list of Master Node IPs. Example: 1.1.1.1 2.2.2.2: 1.1.1.1 2.2.2.2 3.3.3.3
+? Space separated list of Worker Node IPs(optional). Example: 3.3.3.3 4.4.4.4: 
+? Network Stack: IPv4
+? VIP for management cluster: 4.4.4.4
+? Master VIP Interface: ens3
+? Master VIP Vrouter ID (leave empty for random value between 1 and 255): 
+? Management Plane FQDN: foo.bar.io
+? Select additional regions to be configured (space-separated) Example: Region1 Region2: Region1
+? StorageProvider (For custom, save provider specific YAMLs to `/opt/pf9/airctl/conf/ddu/storage/custom/`): custom
+? External IP for DU: 5.5.5.5
+Generated '/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml' and '/opt/pf9/airctl/conf/airctl-config.yaml'. Please review and edit any fields as necessary.
 ```
-> [!NOTE]
-> In this file, the parameter `masterIp` has the value populated based on the input provided for prompt `VIP for management cluster`. Ensure that this VIP is different from the input provided for prompt `Enter external IP for DU`.
+Unattended Mode:
+```
+# airctl configure -d openstack -u -4 -f foo.bar.io -e 5.5.5.5 -i 1.1.1.1,2.2.2.2,3.3.3.3 --master-vip4 4.4.4.4 -v ens3 -z 56 -r Region1 Region2 -p custom
+```
+> [!Note]
+> For custom storage provisioner, the YAML files should be placed at path `/opt/pf9/airctl/conf/ddu/storage/custom/` prior to running `airctl start`. Airctl will configure the dependencies reading YAML files at this path and use the provided storage class (setting it as default) for provisioning volumes for infrastructure AND private cloud director components.
+>
+> This is recommended approach for production environments where if one needs to scale up/down the management plane nodes without impacting the infrastructure components as the volumes and it's data would be persisted outside of the management plane setup.
+
+=> With `hostpath-provisioner` as storage provider:
+```
+# airctl configure
+? Select install driver: openstack
+? Space separated list of Master Node IPs. Example: 1.1.1.1 2.2.2.2: 1.1.1.1 2.2.2.2 3.3.3.3
+? Space separated list of Worker Node IPs(optional). Example: 3.3.3.3 4.4.4.4: 
+? Network Stack: IPv4
+? VIP for management cluster: 4.4.4.4
+? Master VIP Interface: ens3
+? Master VIP Vrouter ID (leave empty for random value between 1 and 255): 
+? Management Plane FQDN: foo.bar.io
+? Select additional regions to be configured (space-separated) Example: Region1 Region2: Region1
+? StorageProvider (For custom, save provider specific YAMLs to `/opt/pf9/airctl/conf/ddu/storage/custom/`): hostpath-provisioner
+? NFS Server IP (For storing gnocchi metrics): 5.5.5.5
+? NFS Share Path. Example: `/mnt/pcd-data-share`: /mnt/pcd-data-share
+? External IP for DU: 6.6.6.6
+Generated '/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml' and '/opt/pf9/airctl/conf/airctl-config.yaml'. Please review and edit any fields as necessary.
+```
+Unattended Mode:
+```
+# airctl configure -d openstack -u -4 -f foo.bar.io -e 5.5.5.5 -i 1.1.1.1,2.2.2.2,3.3.3.3 --master-vip4 4.4.4.4 -v ens3 -r Region1 -k 6.6.6.6 -n /mnt/pcd-data-share -p hostpath-provisioner
+```
+> [!Note]
+> For hostpath-provisioner as storage provider, it is a pre-requisite to ensure NFS Server with required configuration is in place to store metrics for private cloud director components. The NFS server should have passwordless SSH setup between it and the management plane node where airctl is run.
+> 
+> Sample `/etc/exports` file on the NFS Server:
+> ```
+> /mnt/pcd-data-share 1.1.1.1(rw,sync,no_subtree_check,no_root_squash) 2.2.2.2(rw,sync,no_subtree_check,no_root_squash) 3.3.3.3(rw,sync,no_subtree_check,no_root_squash)
+> ```
+>
+>  Sample NFS Mount path on NFS Server:
+> ```
+> $ ls -lrt /mnt/
+> total 4
+> drwxrwxrwx 2 nobody nogroup 4096 Dec  6 18:20 pcd-data-share
+> ```
+>
+> This is not a recommended approach for production environments where if one needs to scale up/down the management plane nodes, then there could be impact to the infrastructure components as the volumes and it's data are present on the management plane nodes itself.
 
 ---
 #### [Only if required] To ensure the deployments happens with a proxy:
@@ -150,9 +171,9 @@ kubectl get nodes --kubeconfig='/etc/pf9/kube.d/kubeconfigs/admin.yaml'
 ```
 # kubectl get nodes --kubeconfig='/etc/pf9/kube.d/kubeconfigs/admin.yaml'
 NAME            STATUS   ROLES    AGE     VERSION
-172.29.20.157   Ready    master   4m29s   v1.29.2
-172.29.20.223   Ready    master   5m41s   v1.29.2
-172.29.21.157   Ready    master   5m42s   v1.29.2
+1.1.1.1   Ready    master   4m29s   v1.29.2
+2.2.2.2   Ready    master   5m41s   v1.29.2
+3.3.3.3   Ready    master   5m42s   v1.29.2
 ```
 > [!NOTE]
 > Please refer to `/var/log/pf9/nodelet.log` for cluster creation troubleshooting
@@ -211,17 +232,19 @@ fqdn:                foo.bar.io
 cluster:             foo-kplane.bar.io
 region:              foo
 task state:          ready
+version:             v-5.12.0-3479469
 -------- region service status ----------
 desired services:  22
 ready services:    22
 ------------- deployment details ---------------
-fqdn:                foo-region1.bar.io
+fqdn:                foo-regionone.bar.io
 cluster:             foo-kplane.bar.io
-region:              foo-region1
+region:              foo-regionone
 task state:          ready
+version:             v-5.12.0-3479469
 -------- region service status ----------
-desired services:  44
-ready services:    44
+desired services:  45
+ready services:    45
 ```
 
 #### Obtaining UI Credentials:
@@ -342,9 +365,88 @@ airctl start --config /opt/pf9/airctl/conf/airctl-config.yaml
 ```
 # airctl start --config /opt/pf9/airctl/conf/airctl-config.yaml
  SUCCESS  scaling up management plane foo
- SUCCESS  scaling up management plane foo-region1                                                                                                                                                              
+ SUCCESS  scaling up management plane foo-region1                                                                                                      
 ```
 
+### Upgrade Management Plane/Regions:
+For all regions:
+```
+airctl upgrade --config /opt/pf9/airctl/conf/airctl-config.yaml
+```
+For a specific region:
+```
+airctl upgrade --region Region1 --config /opt/pf9/airctl/conf/airctl-config.yaml
+```
+```
+# airctl upgrade --region Region1 --config /opt/pf9/airctl/conf/airctl-config.yaml
+ INFO  rollback state directory /tmp/airctl_ddu_backup_Region1_240020739                                                                                          
+ INFO  Saving the helm revisions to the state file                                                                                                                
+ INFO  --- backing up region--- Region1                                                                                                                           
+ INFO  Archive created successfully for Region1. Backup backup.tar.gz saved to /tmp/airctl_ddu_backup_Region1_240020739                                
+ INFO  --- moving old state file to /tmp/airctl_ddu_backup_Region1_240020739/state.yaml ---                                                                       
+ INFO  --- moving old kplane_values.yaml file to /tmp/airctl_ddu_backup_Region1_240020739/kplane_values.yaml ---                                                  
+ SUCCESS  Upgrading region Region1                                                                                                                                
+upgrade done
+```
+---
+### Management Plane Cluster Scale Up
+Configure the pre-requisites on the nodes to be added and then add the nodes to section `masterNodes` in file `/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml`.
+```
+# cat /opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml
+...
+masterNodes:
+- nodeName: 1.1.1.1
+- nodeName: 2.2.2.2
+- nodeName: 3.3.3.3
+- nodeName: 4.4.4.4
+- nodeName: 5.5.5.5
+```
+Run command to scale:
+```
+airctl advanced-ddu scale-mgmt --config /opt/pf9/airctl/conf/airctl-config.yaml --verbose
+```
+Post completion:
+```
+# kubectl get nodes --kubeconfig='/etc/pf9/kube.d/kubeconfigs/admin.yaml'
+NAME            STATUS   ROLES    AGE      VERSION
+1.1.1.1         Ready    master   44m29s   v1.29.2
+2.2.2.2         Ready    master   45m41s   v1.29.2
+3.3.3.3         Ready    master   46m42s   v1.29.2
+4.4.4.4         Ready    master   5m42s    v1.29.2
+5.5.5.5         Ready    master   5m40s    v1.29.2
+```
+
+### Management Plane Cluster Scale Down (Supported only for `custom` storage provider)
+Remove the unwanted master nodes from section `masterNodes` in file `/opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml`.
+Below we are removing nodes `2.2.2.2` and `3.3.3.3`
+```
+# cat /opt/pf9/airctl/conf/nodelet-bootstrap-config.yaml
+...
+masterNodes:
+- nodeName: 1.1.1.1
+- nodeName: 4.4.4.4
+- nodeName: 5.5.5.5
+```
+Run command to scale:
+```
+airctl advanced-ddu scale-mgmt --config /opt/pf9/airctl/conf/airctl-config.yaml --verbose
+```
+For scale down, there is currently an issue where when it tries to remove a node, the containerd mounts are unable to get cleaned up on the host, however the member gets removed from ETCD.
+```
+# airctl advanced-ddu scale-mgmt --config /opt/pf9/airctl/conf/airctl-config.yaml --verbose
+2024-12-05T01:06:21.279Z        info    Removing node 2.2.2.2 from cluster airctl-mgmt
+2024-12-05T01:06:21.279Z        info    Deleting nodelet
+2024-12-05T01:06:21.279Z        info    Removing nodelet with cmd: apt remove -y nodelet
+...
+cannot remove '/run/containerd/io.containerd.grpc.v1.cri/sandboxes/f5cc808d52184fa092b1c9de2cef7a4ef9d606cdd1877be9efe5d4c91ecc4604/shm': Device or resource busy\n"}
+
+Failed to update nodelet cluster: ScaleCluster failed to remove old masters: failed to delete node 2.2.2.2: failed: sudo rm -rf /run/containerd: command sudo sudo rm -rf /run/containerd failed: Process exited with status 1
+Error: ScaleCluster failed to remove old masters: failed to delete node 10.10.10.5: failed: sudo rm -rf /run/containerd: command sudo sudo rm -rf /run/containerd failed: Process exited with status 1
+```
+The node has to be then manually deleted using command `kubectl delete node 2.2.2.2` after which all the terminating pods for that node move to other nodes.
+Because the command errors out for 1st node, the same command needs to be run again i.e. to remove node `3.3.3.3` in this case.
+
+---
 ### Unconfigure Management Plane/Regions:
 ```
 airctl unconfigure-du --config /opt/pf9/airctl/conf/airctl-config.yaml --force
